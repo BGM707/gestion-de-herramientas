@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScannerHerramientas - Gestión de Herramientas</title>
+
+    <!-- Bootstrap 5.3 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous">
+
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.7.0/sweetalert2.min.css" integrity="sha512-Z2+T+9oPIyGWsU2Z43vA5D86cKAFXU+QVnN6r6jVqWmx2M6M7V+kWplX+5gR1sFjG2eL/5N7iN7u7T1gD7b6fA==" crossorigin="anonymous">
+
+    <!-- QR Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="styles_QR_scanner.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar">
+        <div class="sidebar-header d-flex justify-content-between align-items-center p-3">
+            <h4 class="fs-5 mb-0">Menú</h4>
+            <button id="sidebar-toggle" class="btn btn-outline-light btn-sm">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        <ul class="nav flex-column">
+            
+            <li class="nav-item">
+                <a href="/JT/manager/i_manager.html" class="nav-link d-flex align-items-center gap-2">
+                    <i class="fas fa-tools"></i>
+                    <span>Administrador de Herramientas</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/JT/bodega/plano_bodega.html" class="nav-link d-flex align-items-center gap-2">
+                    <i class="fas fa-warehouse"></i>
+                    <span>Bodegas</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/soporte/soporte.html" class="nav-link d-flex align-items-center gap-2">
+                    <i class="fas fa-headset"></i>
+                    <span>Soporte</span>
+                </a>
+            </li>
+        </ul>
+        <div class="sidebar-resizer"></div>
+    </aside>
+
+    <!-- Header -->
+    <header class="bg-primary text-white py-3 shadow-sm">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div class="logo d-flex align-items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 7h2a5 5 0 0 1 0 10h-2m-6 0H7A5 5 0 0 1 7 7h2"></path>
+                </svg>
+                <span class="fw-bold fs-5">ScannerHerramientas Crisoull</span>
+            </div>
+            <nav>
+                <button id="theme-toggle" class="btn btn-outline-light rounded-circle" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Cambiar tema" aria-label="Cambiar tema">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container my-5 main-content">
+        <section class="scanner-section mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fs-4">Escanear Código QR</h2>
+                <span id="scanner-status" class="badge bg-secondary">Inactivo</span>
+            </div>
+            <div class="scanner-container card p-4 shadow-sm">
+                <div class="video-container position-relative mb-3 rounded overflow-hidden">
+                    <video id="qr-video" class="w-100" playsinline muted></video>
+                    <div class="scan-region-highlight position-absolute"></div>
+                </div>
+                <div class="scanner-controls d-flex flex-wrap gap-2">
+                    <button id="start-button" class="btn btn-success" data-bs-toggle="tooltip" title="Iniciar el escáner de QR" aria-label="Iniciar escáner">
+                        <i class="fas fa-play me-2"></i>Iniciar
+                    </button>
+                    <button id="stop-button" class="btn btn-danger" disabled data-bs-toggle="tooltip" title="Detener el escáner de QR" aria-label="Detener escáner">
+                        <i class="fas fa-stop me-2"></i>Detener
+                    </button>
+                    <select id="camera-select" class="form-select w-auto" aria-label="Seleccionar cámara">
+                        <option value="">Seleccionar cámara...</option>
+                    </select>
+                </div>
+                <div class="scanner-result mt-3">
+                    <div id="scan-status" class="alert alert-info mb-0">Esperando para escanear...</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="history-section mb-5">
+            <div class="section-header d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fs-4">Historial de Escaneos</h2>
+                <div class="d-flex gap-2 align-items-center">
+                    <input type="text" id="search-history" placeholder="Buscar..." class="form-control" aria-label="Buscar historial">
+                    <button id="clear-history" class="btn btn-danger" data-bs-toggle="tooltip" title="Limpiar historial" aria-label="Limpiar historial">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="history-list" id="history-container">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col">Fecha</th>
+                            <th scope="col">Hora</th>
+                            <th scope="col">Código QR</th>
+                            <th scope="col">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-table-body"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="tools-section">
+            <div class="section-header d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fs-4">Herramientas Guardadas</h2>
+                <div class="d-flex gap-2 align-items-center">
+                    <input type="text" id="search-tools" placeholder="Buscar..." class="form-control" aria-label="Buscar herramientas">
+                    <select id="category-filter" class="form-select" aria-label="Filtrar por categoría">
+                        <option value="">Todas las categorías</option>
+                        <option value="manual">Manuales</option>
+                        <option value="electric">Eléctricas</option>
+                        <option value="measurement">Medición</option>
+                        <option value="other">Otras</option>
+                    </select>
+                    <button id="add-tool" class="btn btn-primary" data-bs-toggle="tooltip" title="Agregar nueva herramienta" aria-label="Agregar nueva herramienta">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="tools-list" id="tools-container"></div>
+        </section>
+
+        <!-- Modal para agregar/editar herramientas -->
+        <div id="tool-modal" class="modal fade" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header border-0">
+                        <h3 id="modal-title" class="modal-title fs-5">Detalles de la Herramienta</h3>
+                        <button type="button" class="btn-close" id="close-modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="tool-form" novalidate>
+                            <input type="hidden" id="tool-id">
+                            <div class="mb-3">
+                                <label for="tool-name" class="form-label">Nombre <span class="text-danger">*</span></label>
+                                <input type="text" id="tool-name" class="form-control" required aria-describedby="tool-name-error">
+                                <div id="tool-name-error" class="invalid-feedback">El nombre es obligatorio.</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="tool-serial" class="form-label">Número de Serie</label>
+                                    <input type="text" id="tool-serial" class="form-control" aria-describedby="tool-serial-error">
+                                    <div id="tool-serial-error" class="invalid-feedback">El número de serie ya existe.</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="tool-category" class="form-label">Categoría</label>
+                                    <select id="tool-category" class="form-select" aria-label="Categoría">
+                                        <option value="manual">Manual</option>
+                                        <option value="electric">Eléctrica</option>
+                                        <option value="measurement">Medición</option>
+                                        <option value="other">Otra</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="tool-location" class="form-label">Ubicación</label>
+                                <input type="text" id="tool-location" class="form-control">
+                            </div>
+                            <div class="mb-3">
+                                <label for="tool-status" class="form-label">Estado</label>
+                                <select id="tool-status" class="form-select" aria-label="Estado">
+                                    <option value="available">Disponible</option>
+                                    <option value="in-use">En uso</option>
+                                    <option value="maintenance">En mantenimiento</option>
+                                    <option value="lost">Perdida</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="tool-notes" class="form-label">Notas</label>
+                                <textarea id="tool-notes" class="form-control" rows="3"></textarea>
+                            </div>
+                            <div class="d-flex gap-2 justify-content-end">
+                                <button type="submit" class="btn btn-primary position-relative" id="save-tool">
+                                    <i class="fas fa-save me-2"></i>Guardar
+                                    <span class="spinner-border spinner-border-sm position-absolute" role="status" aria-hidden="true" style="display: none;"></span>
+                                </button>
+                                <button type="button" class="btn btn-info" id="generate-qr" disabled data-bs-toggle="tooltip" title="Guarda la herramienta primero">
+                                    <i class="fas fa-qrcode me-2"></i>QR
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" id="cancel-button">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para mostrar QR -->
+        <div id="qr-modal" class="modal fade" tabindex="-1" aria-labelledby="qr-modal-title" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header border-0">
+                        <h3 id="qr-modal-title" class="modal-title fs-5">Código QR</h3>
+                        <button type="button" class="btn-close" id="close-qr-modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <div id="qr-container" class="qr-display mb-3"></div>
+                        <div class="d-flex gap-2 justify-content-center">
+                            <button id="download-qr" class="btn btn-primary">
+                                <i class="fas fa-download me-2"></i>Descargar
+                            </button>
+                            <button id="print-qr" class="btn btn-outline-secondary">
+                                <i class="fas fa-print"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-dark text-white py-3">
+        <div class="container text-center">
+            <p class="mb-0">© 2025 BGM Developer - Gestión de Herramientas Crisoull</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.7.0/sweetalert2.all.min.js" integrity="sha512-SPMTI9HuE5vLi3xU0yPVsGUgJle43lI1l0MXp95b5v0UFz2iF3nU6z0W9gOYGYA6g==/fQ==" crossorigin="anonymous"></script>
+    <script src="app.js"></script>
+</body>
+</html>

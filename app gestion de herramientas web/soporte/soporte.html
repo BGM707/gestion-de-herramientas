@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Soporte</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .dashboard {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .qr-container {
+            margin: 20px 0;
+        }
+        .qr-container img {
+            max-width: 150px;
+        }
+        p {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .contact-btn {
+            background-color: #25D366;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 16px;
+            display: inline-block;
+        }
+        .contact-btn:hover {
+            background-color: #1ebe57;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <h1>Soporte Técnico 24/7</h1>
+        <p>Escanea el código QR o haz clic en el botón para contactarnos por WhatsApp.</p>
+        <div class="qr-container" id="qrcode"></div>
+        <a href="https://wa.me/56941228089?text=Hola%2C%20tengo%20problemas%20con%20Ingher%20Inventario%20AppWeb" target="_blank" class="contact-btn">Contactar por WhatsApp</a>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script>
+        const whatsappNumber = '+56941228089';
+        const message = encodeURIComponent('Hola, tengo problemas con Crisoull Inventario AppWeb');
+        const whatsappLink = `https://wa.me/${whatsappNumber}?text=${message}`;
+
+        // Generar el código QR
+        new QRCode(document.getElementById('qrcode'), {
+            text: whatsappLink,
+            width: 150,
+            height: 150,
+            colorDark: '#000000',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.H
+        });
+    </script>
+</body>
+</html>

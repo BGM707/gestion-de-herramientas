@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crisoull Manager</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+  <style>
+    .sidebar { transition: transform 0.3s ease-in-out; }
+    .content { transition: margin-left 0.3s ease-in-out; }
+    #clock { display: block; color: white; text-align: center; }
+    @media (max-width: 767px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.active { transform: translateX(0); }
+      .content { margin-left: 0 !important; }
+    }
+  </style>
+</head>
+<body class="bg-gray-100 font-sans">
+  <button class="menu-toggle fixed top-4 left-4 z-50 md:hidden bg-gray-800 text-white p-2 rounded" onclick="toggleSidebar()">
+    <i class="fas fa-bars"></i>
+  </button>
+  <div class="sidebar fixed inset-y-0 left-0 w-64 bg-gray-800 text-white transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out" id="sidebar">
+    <div>
+      <span id="clock" class="text-lg font-mono">00:00:00</span>
+      <div class="p-4 text-xl font-bold border-b border-gray-700">Crisoull Manager</div>
+    </div>
+    <a href="#" class="block px-4 py-2 hover:bg-gray-700" onclick="showSection('tools')"><i class="fas fa-tools mr-2"></i> Herramientas</a>
+    <a href="#" class="block px-4 py-2 hover:bg-gray-700" onclick="showSection('fuels')"><i class="fas fa-gas-pump mr-2"></i> Bencinas</a>
+    <a href="#" class="block px-4 py-2 hover:bg-gray-700" onclick="showSection('realtime')"><i class="fas fa-sync-alt mr-2"></i> Datos de bodega faena en Tiempo Real</a>
+    <a href="/JT/QR_scanner/indexQR.html" class="block px-4 py-2 hover:bg-gray-700"><i class="fas fa-qrcode mr-2"></i> ScannerHerramientas</a>
+    <a href="#" class="block px-4 py-2 hover:bg-gray-700" onclick="showSection('settings')"><i class="fas fa-cog mr-2"></i> Configuración</a>
+    <li class="nav-item">
+      <a href="/soporte/soporte.html" class="nav-link d-flex align-items-center gap-2">
+          <i class="fas fa-headset"></i>
+          <span>Soporte</span>
+      </a>
+  </li>
+  </div>
+
+  <div class="content ml-0 md:ml-64 p-6 transition-all duration-300">
+    <h1 class="text-3xl font-bold mb-6">Inventario Crisoull</h1>
+    <button class="btn-back bg-gray-800 text-white px-4 py-2 rounded mb-4" onclick="window.location.href='/JT/bodega/plano_bodega.html'">
+      <i class="fas fa-arrow-left mr-2"></i> Volver al Plano de Bodega
+    </button>
+
+    <!-- Sección de Herramientas -->
+    <div class="container" id="toolsSection">
+      <div class="filters bg-white p-4 rounded shadow mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <input type="text" id="searchInput" class="border p-2 rounded" placeholder="Buscar por nombre, responsable o detalle">
+          <input type="date" id="dateFilter" class="border p-2 rounded">
+          <select id="actionFilter" class="border p-2 rounded">
+            <option value="">Todas las acciones</option>
+            <option value="Préstamo">Préstamo</option>
+            <option value="Devolución">Devolución</option>
+          </select>
+          <select id="costFilter" class="border p-2 rounded">
+            <option value="">Todos los costos</option>
+            <option value="low">Bajo costo (peso < 5kg)</option>
+            <option value="high">Alto costo (peso ≥ 5kg)</option>
+          </select>
+        </div>
+        <button class="btn-filter bg-blue-500 text-white px-4 py-2 rounded mt-4 hover:bg-blue-600" onclick="applyFilters()">
+          <i class="fas fa-filter mr-2"></i> Filtrar
+        </button>
+      </div>
+
+      <div class="form-container bg-white p-4 rounded shadow mb-6">
+        <h2 class="text-xl font-semibold mb-4">Agregar Herramienta</h2>
+        <form id="toolForm">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input type="text" id="toolName" class="border p-2 rounded" placeholder="Nombre de la herramienta" maxlength="50">
+            <input type="number" id="toolQuantity" class="border p-2 rounded" placeholder="Cantidad" min="0" max="1000">
+            <input type="number" id="toolWeight" class="border p-2 rounded" placeholder="Peso (kg)" min="0" max="100" step="0.01">
+            <select id="toolCategory" class="border p-2 rounded">
+              <option value="General">General</option>
+              <option value="Manual">Manual</option>
+              <option value="Eléctrica">Eléctrica</option>
+              <option value="Medición">Medición</option>
+              <option value="Otra">Otra</option>
+            </select>
+            <select id="toolStatus" class="border p-2 rounded">
+              <option value="Disponible">Disponible</option>
+              <option value="En uso">En uso</option>
+              <option value="Mantenimiento">Mantenimiento</option>
+            </select>
+            <select id="toolLocation" class="border p-2 rounded">
+              <option value="Bodega A">Bodega A</option>
+              <option value="Bodega B">Bodega B</option>
+            </select>
+            <input type="text" id="toolDetails" class="border p-2 rounded" placeholder="Detalles (opcional)">
+            <input type="file" id="toolPhoto" class="border p-2 rounded" accept="image/jpeg,image/png">
+          </div>
+          <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded mt-4 hover:bg-green-600">
+            <i class="fas fa-plus mr-2"></i> Agregar Herramienta
+          </button>
+        </form>
+      </div>
+
+      <div class="form-container bg-white p-4 rounded shadow mb-6">
+        <h2 class="text-xl font-semibold mb-4">Importar/Exportar Herramientas</h2>
+        <div class="flex flex-col md:flex-row gap-4">
+          <input type="file" id="excelFile" class="border p-2 rounded" accept=".xlsx">
+          <button class="btn-import bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600" onclick="importTools()">
+            <i class="fas fa-file-import mr-2"></i> Importar
+          </button>
+          <button class="btn-export bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600" onclick="exportTools()">
+            <i class="fas fa-file-export mr-2"></i> Exportar
+          </button>
+          <button class="btn-backup bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600" onclick="backupDatabase()">
+            <i class="fas fa-database mr-2"></i> Respaldar Base de Datos
+          </button>
+        </div>
+      </div>
+
+      <div class="action-buttons flex flex-wrap gap-4 mb-6">
+        <button class="btn-delete bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600" onclick="deleteSelectedTools()">
+          <i class="fas fa-trash mr-2"></i> Eliminar Seleccionados
+        </button>
+        <button class="btn-select-all bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600" onclick="selectAllTools()">
+          <i class="fas fa-check-square mr-2"></i> Seleccionar Todos
+        </button>
+        <button class="btn-edit bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600" onclick="editSelectedTools()">
+          <i class="fas fa-edit mr-2"></i> Editar Seleccionados
+        </button>
+        <button class="btn-compare bg-green-500 text-white px-4 py-2 rounded hover:bg-violet-600" onclick="compareInventories()">
+          <i class="fas fa-balance-scale mr-2"></i> Comparar Inventarios
+        </button>
+      </div>
+
+      <div class="tool-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="toolContainer"></div>
+
+      <div class="history-container bg-white p-4 rounded shadow mt-6">
+        <h2 class="text-xl font-semibold mb-4">Historial de Préstamos y Devoluciones</h2>
+        <table id="historyTable" class="w-full border-collapse">
+          <thead>
+            <tr class="bg-gray-100">
+              <th class="p-2 border">Herramienta</th>
+              <th class="p-2 border">Acción</th>
+              <th class="p-2 border">Fecha</th>
+              <th class="p-2 border">Responsable</th>
+              <th class="p-2 border">Detalle</th>
+            </tr>
+          </thead>
+          <tbody id="historyContainer"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Sección de Bencinas -->
+    <div class="container hidden" id="fuelsSection">
+      <div class="filters bg-white p-4 rounded shadow mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <input type="text" id="fuelSearchInput" class="border p-2 rounded" placeholder="Buscar por nombre o tipo">
+          <select id="fuelTypeFilter" class="border p-2 rounded">
+            <option value="">Todos los tipos</option>
+          </select>
+          <input type="number" id="fuelAmountFilter" class="border p-2 rounded" placeholder="Monto mínimo" min="0">
+        </div>
+        <button class="btn-filter bg-blue-500 text-white px-4 py-2 rounded mt-4 hover:bg-blue-600" onclick="applyFuelFilters()">
+          <i class="fas fa-filter mr-2"></i> Filtrar
+        </button>
+      </div>
+
+      <div class="form-container bg-white p-4 rounded shadow mb-6">
+        <h2 class="text-xl font-semibold mb-4">Agregar Bencina</h2>
+        <form id="fuelForm">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input type="text" id="fuelName" class="border p-2 rounded" placeholder="Responsable de la carga" maxlength="50">
+            <input type="number" id="fuelQuantity" class="border p-2 rounded" placeholder="Cantidad (litros)" min="0" max="1000" step="0.01">
+            <select id="fuelType" class="border p-2 rounded" required>
+              <option value="" disabled selected>Seleccione tipo de bencina</option>
+            </select>
+            <input type="number" id="fuelAmount" class="border p-2 rounded" placeholder="Monto cargado" min="0" max="1000000">
+            <input type="date" id="fuelDate" class="border p-2 rounded" required>
+            <input type="text" id="fuelVehicle" class="border p-2 rounded" placeholder="Vehículo (opcional)">
+            <input type="number" id="fuelOdometer" class="border p-2 rounded" placeholder="Kilometraje (opcional)" min="0">
+            <input type="text" id="fuelDetails" class="border p-2 rounded" placeholder="Detalles (opcional)">
+            <input type="file" id="fuelReceipt" class="border p-2 rounded" accept="image/jpeg,image/png">
+          </div>
+          <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded mt-4 hover:bg-green-600">
+            <i class="fas fa-plus mr-2"></i> Agregar Bencina
+          </button>
+        </form>
+      </div>
+
+      <div class="action-buttons flex flex-wrap gap-4 mb-6">
+        <button class="btn-delete bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600" onclick="deleteSelectedFuels()">
+          <i class="fas fa-trash mr-2"></i> Eliminar Seleccionados
+        </button>
+        <button class="btn-select-all bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600" onclick="selectAllFuels()">
+          <i class="fas fa-check-square mr-2"></i> Seleccionar Todos
+        </button>
+        <button class="btn-edit bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600" onclick="editSelectedFuels()">
+          <i class="fas fa-edit mr-2"></i> Editar Seleccionados
+        </button>
+      </div>
+
+      <div class="fuel-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="fuelContainer"></div>
+
+      <div class="history-container bg-white p-4 rounded shadow mt-6">
+        <h2 class="text-xl font-semibold mb-4">Historial de Cargas de Bencina</h2>
+        <table id="fuelHistoryTable" class="w-full border-collapse">
+          <thead>
+            <tr class="bg-gray-100">
+              <th class="p-2 border">Responsable</th>
+              <th class="p-2 border">Fecha</th>
+              <th class="p-2 border">Cantidad</th>
+              <th class="p-2 border">Tipo</th>
+              <th class="p-2 border">Monto</th>
+            </tr>
+          </thead>
+          <tbody id="fuelHistoryContainer"></tbody>
+        </table>
+      </div>
+    </div>
+
+      <!-- Sección de Datos en Tiempo Real -->
+  <div class="container hidden" id="realtimeSection">
+    <div class="bg-white p-6 rounded shadow mb-6">
+      <h2 class="text-xl font-semibold mb-4">Datos en Tiempo Real</h2>
+      <div id="realtimeData" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <h3 class="text-lg font-medium mb-2">Plano de Bodega Crisoull</h3>
+          <div class="border p-2 rounded resize overflow-auto" style="width: 500px; height: 500px; min-width: 300px; min-height: 300px;">
+            <!-- Iframe que carga plano_bodega.html -->
+            <iframe src="/JT/bodega/plano_bodega.html" style="width:100%; height:100%; border:0;"></iframe>
+          </div>
+
+          <div id="bodegaData" class="overflow-auto max-h-64">
+            <table id="bodegaTable" class="w-full border-collapse">
+              <thead>
+                <tr class="bg-gray-100">
+                  <th class="p-2 border">ID</th>  
+                  <th class="p-2 border">Nombre</th>
+                  <th class="p-2 border">Cantidad</th>
+                  <th class="p-2 border">Peso</th>
+                  <th class="p-2 border">Estado</th>
+                  <th class="p-2 border">Ubicación</th>
+                </tr>
+              </thead>
+              <tbody id="bodegaDataContainer"></tbody>
+            </table>
+          </div>
+        </div>
+        
+        <div>
+          <h3 class="text-lg font-medium mb-2">ScannerHerramientas</h3>
+          <div id="scannerData"></div>
+          <div>
+            <div class="container hidden" id="QRScannerSection">
+              <h2 class="text-xl font-semibold mb-4">Scanner Herramientas</h2>
+              <div id="scannerData" class="overflow-auto max-h-64">
+                <table id="scannerTable" class="w-full border-collapse">
+                  <thead>
+                    <tr class="bg-gray-100">
+
+          </div>
+        </div>
+      </div>
+
+    <button class="bg-violet-500 text-white px-4 py-2 rounded mt-4 hover:bg-violet-600" onclick="compareInventories()">
+      <i class="fas fa-balance-scale mr-2"></i> Comparar Inventarios
+    </button>
+  </div>
+</div>
+
+    <!-- Sección de Configuración -->
+    <div class="container hidden" id="settingsSection">
+      <div class="bg-white p-6 rounded shadow mb-6">
+        <h2 class="text-xl font-semibold mb-4">Configuración del Sistema</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h3 class="text-lg font-medium mb-2">Configuración de Herramientas</h3>
+            <div class="mb-4">
+              <label class="block mb-2">Categorías predefinidas:</label>
+              <div id="toolCategories" class="flex flex-wrap gap-2 mb-2"></div>
+              <div class="flex">
+                <input type="text" id="newToolCategory" class="border p-2 rounded flex-grow" placeholder="Nueva categoría">
+                <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 ml-2" onclick="addToolCategory()">
+                  <i class="fas fa-plus"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h3 class="text-lg font-medium mb-2">Configuración de Bencinas</h3>
+            <div class="mb-4">
+              <label class="block mb-2">Tipos de combustible:</label>
+              <div id="fuelTypes" class="flex flex-wrap gap-2 mb-2"></div>
+              <div class="flex">
+                <input type="text" id="newFuelType" class="border p-2 rounded flex-grow" placeholder="Nuevo tipo">
+                <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 ml-2" onclick="addFuelType()">
+                  <i class="fas fa-plus"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de detalles de herramienta -->
+    <div id="toolModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+      <div class="modal-content bg-white p-6 rounded shadow max-w-4xl w-full">
+        <div class="modal-header flex justify-between items-center mb-4">
+          <h2 id="modalToolName" class="text-xl font-semibold"></h2>
+          <span class="close cursor-pointer text-2xl">×</span>
+        </div>
+        <div class="modal-body grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <img id="modalToolPhoto" alt="Tool Photo" class="w-full h-auto mb-4 max-h-64 object-contain hidden">
+            <div class="tool-details">
+              <p><strong>ID:</strong> <span id="modalToolId"></span></p>
+              <p><strong>Cantidad:</strong> <span id="modalToolQuantity"></span></p>
+              <p><strong>Peso:</strong> <span id="modalToolWeight"></span> kg</p>
+              <p><strong>Estado:</strong> <span id="modalToolStatus"></span></p>
+              <p><strong>Ubicación:</strong> <span id="modalToolLocation"></span></p>
+              <p><strong>Fecha registro:</strong> <span id="modalToolRegisterDate"></span></p>
+            </div>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold mb-2">Historial de Movimientos</h3>
+            <div class="overflow-auto max-h-64">
+              <table id="toolHistoryTable" class="w-full border-collapse">
+                <thead>
+                  <tr class="bg-gray-100">
+                    <th class="p-2 border">Fecha</th>
+                    <th class="p-2 border">Acción</th>
+                    <th class="p-2 border">Responsable</th>
+                    <th class="p-2 border">Detalle</th>
+                  </tr>
+                </thead>
+                <tbody id="modalToolHistory"></tbody>
+              </table>
+            </div>
+            <div class="mt-4">
+              <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600" onclick="printToolReport()">
+                <i class="fas fa-print mr-2"></i> Imprimir Reporte
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de detalles de bencina -->
+    <div id="fuelModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+      <div class="modal-content bg-white p-6 rounded shadow max-w-lg w-full">
+        <div class="modal-header flex justify-between items-center mb-4">
+          <h2 id="modalFuelName" class="text-xl font-semibold"></h2>
+          <span class="close cursor-pointer text-2xl">×</span>
+        </div>
+        <div class="modal-body">
+          <img id="modalFuelReceipt" alt="Fuel Receipt" class="w-full h-auto mb-4 hidden">
+          <p><strong>Cantidad:</strong> <span id="modalFuelQuantity"></span> litros</p>
+          <p><strong>Tipo:</strong> <span id="modalFuelType"></span></p>
+          <p><strong>Monto:</strong> $<span id="modalFuelAmount"></span></p>
+          <p><strong>Fecha:</strong> <span id="modalFuelDate"></span></p>
+          <p><strong>Vehículo:</strong> <span id="modalFuelVehicle"></span></p>
+          <p><strong>Kilometraje:</strong> <span id="modalFuelOdometer"></span></p>
+          <p><strong>Detalles:</strong> <span id="modalFuelDetails"></span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
