@@ -1,0 +1,175 @@
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f4f4f4f7;
+      min-height: 100vh;
+    }
+
+    h1 {
+      text-align: center;
+      background: #35353b;
+      color: white;
+      padding: 15px;
+      margin: 0 0 20px;
+      border-radius: 5px;
+    }
+
+    .menu {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .menu button {
+      padding: 10px 20px;
+      background: #035bcd;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .bodegas-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      min-height: 600px;
+      width: 100%;
+    }
+
+    .bodega {
+      background: white;
+      border: 2px solid #ccc;
+      padding: 15px;
+      width: 400px;
+      min-height: 500px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      position: absolute;
+      resize: both;
+      overflow: auto;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .bodega h2 {
+      text-align: center;
+      background: #415346;
+      color: white;
+      padding: 10px;
+      margin: 0 0 15px;
+      border-radius: 5px;
+      cursor: move;
+    }
+
+    .estantes {
+      position: relative;
+      flex-grow: 1;
+      min-height: 400px;
+      padding: 10px;
+    }
+
+    .estante {
+      width: 140px;
+      min-width: 100px;
+      min-height: 240px;
+      border: 1px solid #999;
+      text-align: center;
+      padding: 10px;
+      border-radius: 5px;
+      position: absolute;
+      cursor: move;
+      user-select: none;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+      resize: both;
+      overflow: auto;
+    }
+
+    .estante input,
+    .estante input[type="date"],
+    .estante input[type="number"],
+    .estante input[type="url"],
+    .estante input[type="color"] {
+      width: 100%;
+      margin: 5px 0;
+      font-size: 0.8em;
+      padding: 4px;
+      text-align: center;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      box-sizing: border-box;
+    }
+
+    .estante input[type="color"] {
+      height: 30px;
+      padding: 2px;
+      cursor: pointer;
+    }
+
+    .estante-id, .estante-coords {
+      font-size: 0.8em;
+      color: #555;
+      margin: 5px 0;
+      display: none;
+    }
+
+    .estante-id.visible, .estante-coords.visible {
+      display: block;
+    }
+
+    .qr-code {
+      margin: 10px auto;
+      text-align: center;
+    }
+
+    .estante-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 10px;
+      justify-content: center;
+    }
+
+    .btn-action {
+      font-size: 0.7em;
+      padding: 5px 8px;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      color: white;
+    }
+
+    .btn-toggle-id { background: #6c757d; }
+    .btn-edit { background: #ffc107; }
+    .btn-delete { background: #dc3545; }
+    .btn-delete-bodega { background: #dc3545; margin-top: 10px; }
+
+    #addBodegaBtn, #backupBtn, #downloadPdfBtn, #downloadExcelBtn, #arrangeBodegasBtn {
+      display: inline-block;
+      margin: 20px 10px;
+      padding: 12px 24px;
+      background: #547076;
+      color: white;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .btn-add-estante {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      margin: 15px auto 0;
+      display: block;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9em;
+    }
+    
